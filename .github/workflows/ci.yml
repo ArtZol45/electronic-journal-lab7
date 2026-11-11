@@ -49,7 +49,7 @@ jobs:
           cache: maven
 
       - name: Build, test and analyze
-        run: ./mvnw --batch-mode clean verify
+        run: ./mvnw --batch-mode -Djacoco.destFile=target/jacoco.exec clean verify
 
       - name: Upload JaCoCo report
         if: always()
