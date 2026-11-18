@@ -47,8 +47,7 @@ jobs:
         run: ./mvnw --batch-mode checkstyle:checkstyle
 
       - name: Run tests
-        continue-on-error: true
-        run: ./mvnw --batch-mode test
+        run: ./mvnw --batch-mode clean test
 
       - name: Generate JaCoCo report
         if: always()

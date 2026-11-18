@@ -1,0 +1,632 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Электронный журнал</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div id="login-screen" class="login-screen">
+    <form id="login-form" class="login-card">
+        <div class="login-logo">ЭЖ</div>
+
+        <h1>Электронный журнал</h1>
+        <p class="login-description">Войдите в свою учётную запись</p>
+
+        <label for="login-username">Логин</label>
+        <input
+            type="text"
+            id="login-username"
+            placeholder="Введите логин"
+            autocomplete="username"
+            required
+        >
+
+        <label for="login-password">Пароль</label>
+        <input
+            type="password"
+            id="login-password"
+            placeholder="Введите пароль"
+            autocomplete="current-password"
+            required
+        >
+
+        <div id="login-error" class="login-error hidden"></div>
+
+        <button type="submit" id="login-button" class="button button-primary">
+            Войти
+        </button>
+    </form>
+</div>
+<div class="app hidden" id="app">
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">ЭЖ</div>
+            <div>
+                <strong>Электронный журнал</strong>
+                <small>Учебная система</small>
+            </div>
+        </div>
+
+        <div class="menu-title">ОСНОВНОЕ</div>
+        <nav>
+            <button class="nav-item active" data-page="dashboard">
+                <span>▦</span> Главная
+            </button>
+            <button class="nav-item admin-teacher-only" data-page="students">
+                <span>♙</span> Студенты
+            </button>
+            <button class="nav-item" data-page="grades">
+                <span>▤</span> Оценки
+            </button>
+            <button class="nav-item" data-page="attendance">
+                <span>✓</span> Посещаемость
+            </button>
+            <button class="nav-item" data-page="schedule">
+                <span>▦</span> Расписание
+            </button>
+            <button class="nav-item" data-page="reports">
+                <span>▥</span> Отчёты
+            </button>
+            <button class="nav-item admin-only" data-page="users">
+                <span>♙</span> Пользователи
+            </button>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="system-status">
+                <span class="status-dot"></span>
+                Система подключена
+            </div>
+            <small>Электронный журнал · 2026</small>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div>
+                <div class="breadcrumb">Учебная система / <span id="breadcrumb">Главная</span></div>
+                <h1 id="page-title">Главная</h1>
+            </div>
+            <div class="topbar-right">
+                <span class="today" id="today"></span>
+
+                <div class="user-avatar" id="user-avatar">П</div>
+
+                <div class="user-info">
+                    <strong id="current-username">Пользователь</strong>
+                    <small id="current-role">Роль</small>
+                </div>
+
+                <button
+                    type="button"
+                    class="button button-secondary"
+                    onclick="logout()"
+                >
+                    Выйти
+                </button>
+            </div>
+        </header>
+
+        <div class="content">
+            <div id="message" class="message hidden"></div>
+
+            <section class="page active" id="page-dashboard">
+                <div class="welcome">
+                    <div>
+                        <h2>Добро пожаловать!</h2>
+                        <p>Обзор учебного процесса и текущих показателей.</p>
+                    </div>
+                    <button class="button button-light" onclick="refreshDashboard()">Обновить данные ↻</button>
+                </div>
+
+                <div class="stats-grid admin-teacher-only">
+                    <div class="stat-card">
+                        <div class="stat-label">Всего студентов</div>
+                        <div class="stat-value" id="stat-students">—</div>
+                        <div class="stat-note">Зарегистрировано в системе</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Выставлено оценок</div>
+                        <div class="stat-value" id="stat-grades">—</div>
+                        <div class="stat-note">По всем студентам</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Отметок посещаемости</div>
+                        <div class="stat-value" id="stat-attendance">—</div>
+                        <div class="stat-note">Всего записей</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Средний балл</div>
+                        <div class="stat-value" id="stat-average">—</div>
+                        <div class="stat-note">По имеющимся оценкам</div>
+                    </div>
+                </div>
+
+                <div class="panel admin-teacher-only">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Последние студенты</h2>
+                            <p>Список зарегистрированных студентов</p>
+                        </div>
+                        <button class="button button-primary" onclick="showPage('students')">Все студенты →</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr><th>ID</th><th>ФИО студента</th><th>Действие</th></tr>
+                            </thead>
+                            <tbody id="dashboard-students">
+                            <tr><td colspan="3" class="empty">Загрузка данных...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="page admin-teacher-only" id="page-students">
+                <div class="section-toolbar">
+                    <div>
+                        <h2>Список студентов</h2>
+                        <p>Управление списком обучающихся</p>
+                    </div>
+                    <button class="button button-primary admin-only" onclick="openModal('student-modal')">+ Добавить студента</button>
+                </div>
+                <div class="panel">
+                    <div class="panel-heading">
+                        <input class="search" id="student-search" placeholder="Поиск по ФИО или ID...">
+                        <span class="muted" id="student-count"></span>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>ФИО студента</th>
+                                <th>Учебная группа</th>
+                                <th>Отчёт</th>
+                                <th>Действия</th>
+                            </tr>
+                            </thead>
+                            <tbody id="students-table">
+                            <tr><td colspan="5" class="empty">Загрузка данных...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="page" id="page-grades">
+                <div class="section-toolbar">
+                    <div>
+                        <h2>Успеваемость студентов</h2>
+                        <p>Просмотр и выставление оценок</p>
+                    </div>
+                    <button class="button button-primary admin-teacher-only" onclick="openModal('grade-modal')">+ Выставить оценку</button>
+                </div>
+                <div class="panel">
+                    <div class="panel-heading">
+                        <label class="field-inline">
+                            Студент
+                            <select id="grade-student-filter">
+                                <option value="">Выберите студента</option>
+                            </select>
+                        </label>
+                        <button class="button button-secondary" onclick="loadAllGrades()">Показать оценки</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr><th>ID студента</th><th>Предмет</th><th>Оценка</th></tr>
+                            </thead>
+                            <tbody id="grades-table">
+                            <tr><td colspan="3" class="empty">Выберите студента для просмотра оценок</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="page" id="page-attendance">
+                <div class="section-toolbar">
+                    <div>
+                        <h2>Посещаемость</h2>
+                        <p>Учёт присутствия и отсутствия студентов</p>
+                    </div>
+                    <button class="button button-primary admin-teacher-only" onclick="openModal('attendance-modal')">+ Добавить отметку</button>
+                </div>
+                <div class="panel">
+                    <div class="panel-heading">
+                        <label class="field-inline">
+                            Студент
+                            <select id="attendance-student-filter">
+                                <option value="">Выберите студента</option>
+                            </select>
+                        </label>
+                        <button class="button button-secondary" onclick="loadAllAttendance()">Показать посещаемость</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr><th>Дата</th><th>ID студента</th><th>Предмет</th><th>Статус</th></tr>
+                            </thead>
+                            <tbody id="attendance-table">
+                            <tr><td colspan="4" class="empty">Выберите студента для просмотра посещаемости</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="page" id="page-schedule">
+                <div class="section-toolbar">
+                    <div>
+                        <h2>Расписание занятий</h2>
+                        <p>Просмотр и добавление учебных занятий</p>
+                    </div>
+                    <button class="button button-primary admin-teacher-only" onclick="openModal('schedule-modal')">+ Добавить занятие</button>
+                </div>
+                <div class="panel">
+                    <div class="panel-heading">
+                        <label class="field-inline">
+                            Дата занятий
+                            <input type="date" id="schedule-date">
+                        </label>
+                        <button class="button button-secondary" onclick="loadSchedule()">Показать расписание</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr><th>Время</th><th>Предмет</th><th>Учебная группа</th><th>Аудитория</th><th>Дата</th></tr>
+                            </thead>
+                            <tbody id="schedule-table">
+                            <tr><td colspan="4" class="empty">Выберите дату для просмотра расписания</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="page" id="page-reports">
+                <div class="section-toolbar">
+                    <div>
+                        <h2>Отчёты</h2>
+                        <p>Сводная информация об успеваемости и посещаемости</p>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Отчёт по студенту</h2>
+                            <p>Выберите студента для формирования отчёта</p>
+                        </div>
+                    </div>
+                    <div class="report-controls">
+                        <select id="report-student">
+                            <option value="">Выберите студента</option>
+                        </select>
+                        <button class="button button-primary" onclick="loadReport()">Сформировать отчёт</button>
+                    </div>
+                    <div id="report-result" class="report-result">
+                        <div class="empty">Отчёт пока не сформирован</div>
+                    </div>
+                </div>
+            </section>
+            <section class="page" id="page-users">
+                <div class="section-toolbar">
+                    <div>
+                        <h2>Управление пользователями</h2>
+                        <p>Создание учётных записей студентов и преподавателей</p>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Всего учётных записей</div>
+                        <div class="stat-value" id="users-total">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Студентов</div>
+                        <div class="stat-value" id="users-students">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Преподавателей</div>
+                        <div class="stat-value" id="users-teachers">—</div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Учётные записи</h2>
+                            <p>Список зарегистрированных пользователей системы</p>
+                        </div>
+                        <button class="button button-secondary" onclick="loadUsers()">
+                            Обновить список
+                        </button>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Логин</th>
+                                <th>Роль</th>
+                                <th>ID студента</th>
+                                <th>Действия</th>
+                            </tr>
+                            </thead>
+                            <tbody id="users-table">
+                            <tr>
+                                <td colspan="5" class="empty">Загрузка данных...</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="section-toolbar" style="margin-top: 24px;">
+                    <div>
+                        <h2>Создание учётной записи</h2>
+                        <p>Выберите тип пользователя</p>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="report-controls">
+                        <button class="button button-primary"
+                                onclick="openModal('student-modal')">
+                            + Добавить студента
+                        </button>
+
+                        <button class="button button-primary"
+                                onclick="openModal('teacher-modal')">
+                            + Добавить преподавателя
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<!-- Добавление студента -->
+<div class="modal hidden" id="student-modal">
+    <form class="modal-card" onsubmit="addStudent(event)">
+        <div class="modal-heading">
+            <h2>Добавление студента</h2>
+            <button type="button" class="close"
+                    onclick="closeModal('student-modal')">×</button>
+        </div>
+
+        <label>
+            ID студента
+            <input type="number" id="new-student-id" min="1" required>
+        </label>
+
+        <label>
+            ФИО студента
+            <input type="text" id="new-student-name"
+                   maxlength="200" required
+                   placeholder="test test test">
+        </label>
+
+        <label>
+        Учебная группа
+        <input type="text" id="new-student-group"
+            maxlength="50" required
+            placeholder="test, ИС-21">
+        </label>
+
+        <label>
+            Логин для входа
+            <input type="text" id="new-student-username"
+                   maxlength="100" required
+                   placeholder="student1">
+        </label>
+
+        <label>
+            Пароль
+            <input type="password" id="new-student-password"
+                   minlength="6" required
+                   placeholder="Не менее 6 символов">
+        </label>
+
+        <div class="modal-actions">
+            <button type="button" class="button button-secondary"
+                    onclick="closeModal('student-modal')">
+                Отмена
+            </button>
+            <button type="submit" class="button button-primary">
+                Создать студента
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Добавление преподавателя -->
+<div class="modal hidden" id="teacher-modal">
+    <form class="modal-card" onsubmit="addTeacher(event)">
+        <div class="modal-heading">
+            <h2>Добавление преподавателя</h2>
+            <button type="button" class="close"
+                    onclick="closeModal('teacher-modal')">×</button>
+        </div>
+
+        <label>
+            Логин
+            <input type="text" id="new-teacher-username"
+                   maxlength="100" required
+                   placeholder="teacher1">
+        </label>
+
+        <label>
+            Пароль
+            <input type="password" id="new-teacher-password"
+                   minlength="6" required
+                   placeholder="Не менее 6 символов">
+        </label>
+
+        <div class="modal-actions">
+            <button type="button" class="button button-secondary"
+                    onclick="closeModal('teacher-modal')">
+                Отмена
+            </button>
+            <button type="submit" class="button button-primary">
+                Создать преподавателя
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Редактирование студента -->
+<div class="modal hidden" id="edit-student-modal">
+    <form class="modal-card" onsubmit="updateStudent(event)">
+        <div class="modal-heading">
+            <h2>Редактирование студента</h2>
+            <button type="button" class="close"
+                    onclick="closeModal('edit-student-modal')">×</button>
+        </div>
+
+        <label>
+            ID студента
+            <input type="number" id="edit-student-id" readonly>
+        </label>
+
+        <label>
+            ФИО студента
+            <input type="text" id="edit-student-name"
+                   maxlength="200" required>
+        </label>
+
+        <label>
+            Учебная группа
+            <input type="text" id="edit-student-group"
+                maxlength="50" required>
+        </label>
+
+        <div class="modal-actions">
+            <button type="button" class="button button-secondary"
+                    onclick="closeModal('edit-student-modal')">
+                Отмена
+            </button>
+            <button type="submit" class="button button-primary">
+                Сохранить изменения
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Редактирование преподавателя -->
+<div class="modal hidden" id="edit-teacher-modal">
+    <form class="modal-card" onsubmit="updateTeacher(event)">
+        <div class="modal-heading">
+            <h2>Редактирование преподавателя</h2>
+            <button type="button" class="close"
+                    onclick="closeModal('edit-teacher-modal')">×</button>
+        </div>
+
+        <input type="hidden" id="edit-teacher-id">
+
+        <label>
+            Логин
+            <input type="text" id="edit-teacher-username"
+                   maxlength="100" required>
+        </label>
+
+        <label>
+            Новый пароль
+            <input type="password" id="edit-teacher-password"
+                   minlength="6"
+                   placeholder="Оставьте пустым, чтобы не менять">
+        </label>
+
+        <div class="modal-actions">
+            <button type="button" class="button button-secondary"
+                    onclick="closeModal('edit-teacher-modal')">
+                Отмена
+            </button>
+            <button type="submit" class="button button-primary">
+                Сохранить изменения
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Добавление оценки -->
+<div class="modal hidden" id="grade-modal">
+    <form class="modal-card" onsubmit="addGrade(event)">
+        <div class="modal-heading">
+            <h2>Выставление оценки</h2>
+            <button type="button" class="close" onclick="closeModal('grade-modal')">×</button>
+        </div>
+        <label>Студент<select id="new-grade-student" required></select></label>
+        <label>Предмет<input type="text" id="new-grade-subject" maxlength="100" required></label>
+        <label>Оценка
+            <select id="new-grade-value" required>
+                <option value="5">5 — отлично</option>
+                <option value="4">4 — хорошо</option>
+                <option value="3">3 — удовлетворительно</option>
+                <option value="2">2 — неудовлетворительно</option>
+            </select>
+        </label>
+        <div class="modal-actions">
+            <button type="button" class="button button-secondary" onclick="closeModal('grade-modal')">Отмена</button>
+            <button type="submit" class="button button-primary">Сохранить</button>
+        </div>
+    </form>
+</div>
+
+<!-- Добавление посещаемости -->
+<div class="modal hidden" id="attendance-modal">
+    <form class="modal-card" onsubmit="addAttendance(event)">
+        <div class="modal-heading">
+            <h2>Отметка посещаемости</h2>
+            <button type="button" class="close" onclick="closeModal('attendance-modal')">×</button>
+        </div>
+        <label>Студент<select id="new-attendance-student" required></select></label>
+        <label>Дата<input type="date" id="new-attendance-date" required></label>
+        <label>Предмет<input type="text" id="new-attendance-subject" maxlength="100" required></label>
+        <label>Статус
+            <select id="new-attendance-present">
+                <option value="true">Присутствовал</option>
+                <option value="false">Отсутствовал</option>
+            </select>
+        </label>
+        <div class="modal-actions">
+            <button type="button" class="button button-secondary" onclick="closeModal('attendance-modal')">Отмена</button>
+            <button type="submit" class="button button-primary">Сохранить</button>
+        </div>
+    </form>
+</div>
+
+<!-- Добавление занятия -->
+<div class="modal hidden" id="schedule-modal">
+    <form class="modal-card" onsubmit="addSchedule(event)">
+        <div class="modal-heading">
+            <h2>Добавление занятия</h2>
+            <button type="button" class="close" onclick="closeModal('schedule-modal')">×</button>
+        </div>
+        <label>Дата<input type="date" id="new-schedule-date" required></label>
+        <label>Время<input type="time" id="new-schedule-time" required></label>
+        <label>Предмет<input type="text" id="new-schedule-subject" maxlength="100" required></label>
+        <label>Аудитория<input type="text" id="new-schedule-classroom" required></label>
+        <label>
+            Учебная группа
+            <select id="new-schedule-group" required>
+                <option value="">Выберите группу</option>
+            </select>
+        </label>
+        <div class="modal-actions">
+            <button type="button" class="button button-secondary" onclick="closeModal('schedule-modal')">Отмена</button>
+            <button type="submit" class="button button-primary">Сохранить</button>
+        </div>
+    </form>
+</div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>
