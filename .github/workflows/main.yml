@@ -81,6 +81,7 @@ jobs:
         run: |
           mkdir -p metrics
           python3 - <<'PY'
+          import csv
           import glob
           import os
           import subprocess
@@ -122,17 +123,16 @@ jobs:
           # 3. Coverage from JaCoCo CSV
           line_covered = line_missed = 0
           csv_files = glob.glob("**/jacoco.csv", recursive=True)
+
           for path in csv_files:
               try:
-                  with open(path, encoding="utf-8") as file:
-                      next(file, None)
-                      for row in file:
-                          parts = row.strip().split(",")
-                          if len(parts) >= 12:
-                              line_missed += int(parts[8])
-                              line_covered += int(parts[9])
-              except (OSError, ValueError):
+                  with open(path, newline="", encoding="utf-8") as file:
+                      for row in csv.DictReader(file):
+                          line_missed += int(row["LINE_MISSED"])
+                          line_covered += int(row["LINE_COVERED"])
+              except (OSError, ValueError, KeyError):
                   pass
+
           total_lines = line_covered + line_missed
           coverage = 100 * line_covered / total_lines if total_lines else 0
 
