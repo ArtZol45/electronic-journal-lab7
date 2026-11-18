@@ -19,6 +19,25 @@ jobs:
     name: Style, tests and coverage
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: electronic_journal
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d electronic_journal"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DB_PASSWORD: postgres
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: test-admin-password
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
